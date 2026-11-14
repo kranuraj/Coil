@@ -1,0 +1,25 @@
+{
+ "rewrites": [
+  {
+   "source": "/yf1/:p*",
+   "destination": "/api/yf?h=1&p=:p*"
+  },
+  {
+   "source": "/yf2/:p*",
+   "destination": "/api/yf?h=2&p=:p*"
+  }
+ ],
+ "redirects": [
+  {
+   "source": "/:path*",
+   "has": [
+    {
+     "type": "host",
+     "value": "rpci-screener.vercel.app"
+    }
+   ],
+   "destination": "https://getcoil.vercel.app/:path*",
+   "permanent": true
+  }
+ ]
+}
