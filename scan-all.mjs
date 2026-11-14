@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Scan every NSE equity. Usage: node rpci/scan-all.mjs EQUITY_L.csv out.json [concurrency]
+// Scan every NSE equity. Usage: node scan-all.mjs EQUITY_L.csv out.json [concurrency]
 // EQUITY_L.csv: https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 const CACHE = process.env.RPCI_CACHE;   // optional: directory to save daily bars for evaluate.mjs

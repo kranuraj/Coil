@@ -16,7 +16,7 @@ import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
 import * as R from './rpci.mjs';
 
 const CACHE = process.argv[2];
-if (!CACHE) { console.error('usage: node rpci/evaluate.mjs <barsCacheDir>'); process.exit(1); }
+if (!CACHE) { console.error('usage: node evaluate.mjs <barsCacheDir>'); process.exit(1); }
 const HERE = new URL('./', import.meta.url);
 const H = [5, 20, 60], STEP = 5, LOOKBACK = 500, WINDOW = 420, CAP = 1, MIN_VAL = 5e6, LIQ = 1e8;
 const CHECKS = ['Valuation', 'Earnings Power', 'Momentum', 'Price Contraction', 'Timeframe Alignment', 'Outperformance',

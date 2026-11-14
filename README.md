@@ -21,17 +21,17 @@ Conditions: ≥85% Strongly favourable, ≥70% Favourable, ≥50% Neutral, else 
 
 ## Use
 ```
-node rpci/screener.mjs RELIANCE.NS TCS.NS --min 8      # CLI (Node 18+)
-node rpci/screener.mjs --file nifty500.txt --json
-node rpci/serve.mjs                                    # local preview at http://localhost:5174
-node rpci/test.mjs                                     # offline test, synthetic data
+node screener.mjs RELIANCE.NS TCS.NS --min 8      # CLI (Node 18+)
+node screener.mjs --file nifty500.txt --json
+node serve.mjs                                    # local preview at http://localhost:5174
+node test.mjs                                     # offline test, synthetic data
 ```
 Data comes from Yahoo Finance (NSE: `.NS`, BSE: `.BO`). Not investment advice.
 
 ## All-NSE scan and results list
 ```
 curl -A "Mozilla/5.0" -o EQUITY_L.csv https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv
-node rpci/scan-all.mjs EQUITY_L.csv rpci/results.json 12     # ~40s for ~2,600 stocks
+node scan-all.mjs EQUITY_L.csv results.json 12     # ~40s for ~2,600 stocks
 ```
 `index.html` shows `results.json` in a Linear-style list: grouped by conditions or stage, filters, sort, side peek, ⌘K palette, j/k keys, dark and light themes, CSV export.
 Deployed on Vercel with `api/yf.js` as the Yahoo proxy.
@@ -40,8 +40,8 @@ Calibrated against a published RPCI result (ACUTAAS, 13 Nov 2026: 10/11, matches
 
 ## Evaluation layer (which criteria work)
 ```
-RPCI_CACHE=/tmp/bars node rpci/scan-all.mjs EQUITY_L.csv rpci/results.json   # also writes rpci/history/<date>.json
-node rpci/evaluate.mjs /tmp/bars                                               # writes rpci/analytics.json, adds prob to results.json
+RPCI_CACHE=/tmp/bars node scan-all.mjs EQUITY_L.csv results.json   # also writes history/<date>.json
+node evaluate.mjs /tmp/bars                                               # writes rpci/analytics.json, adds prob to results.json
 ```
 - **Backtest:** the 9 technical checks replayed every 5 sessions over ~2 years for all NSE stocks (≥ ₹50 lakh traded), scored on 5/20/60-session return vs Nifty 50.
 - **Live log:** every daily snapshot (all 11 checks, point-in-time incl. fundamentals) is scored as it matures. This is the only fair test of Valuation and Earnings Power.
