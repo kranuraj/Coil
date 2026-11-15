@@ -70,6 +70,10 @@ for (const [g, bi] of gridIdx.entries()) {
       rs63: ret(c, 63) - ret(bc, 63), rs126: ret(c, 126) - ret(bc, 126), inst: +flags[4].result };
     { const n = win.length, hh = Math.max(...win.slice(n - 21, n - 1).map(b => b.h)), av = win.slice(n - 51, n - 1).reduce((t, b) => t + b.v, 0) / 50;
       f.bo = x.c > hh && av && x.v / av >= 1.5 ? 1 : 0; }
+    { let hi = -1, lo = Infinity, L = 0; const m = win.length - 1;   // base breakout (same rule as daily.mjs)
+      for (let k = m - 1; k >= 0; k--) { hi = Math.max(hi, win[k].h); lo = Math.min(lo, win[k].l); if ((hi - lo) / hi > 0.30) break; L++; }
+      const H = L >= 20 ? Math.max(...win.slice(m - L, m).map(q => q.h)) : Infinity;
+      f.base = flags[7].pass && x.c > H && win[m - 1].c <= H ? 1 : 0; }
     day.push({ d, g, sym: s.sym, i, p: '--' + flags.map(r => r.pass === null ? '-' : r.pass ? '1' : '0').join(''), f, reg, val, atr, c: x.c, e: isToday ? [null, null, null] : H.map(h => fwd(bars, i, h)) });
   }
   // sector strength = industry median 3-month excess return on this date; strong = positive and in the top 40% of sectors
@@ -144,6 +148,8 @@ const trigger = (name, desc, P, F) => ({ name, desc, pass: allH(P), fail: allH(F
 const triggers = [
   trigger('Breakout today', 'Close above the 20-session high on 1.5x+ volume, all stocks', samples.filter(x => x.f.bo === 1), samples.filter(x => x.f.bo === 0)),
   trigger('Breakout + strong score', 'Breakout among stocks passing 7+ of 9 technical checks', strongS.filter(x => x.f.bo === 1), strongS.filter(x => x.f.bo === 0)),
+  trigger('Base breakout', 'Stage 2 stock closes above a 4+ week base (30% band), all stocks', samples.filter(x => x.f.base === 1), samples.filter(x => x.f.base === 0)),
+  trigger('Base breakout + strong score', 'Base breakout among stocks passing 7+ of 9 technical checks', strongS.filter(x => x.f.base === 1), strongS.filter(x => x.f.base === 0)),
   trigger('Fresh setup', 'Score jumped to 7+ from 5 or less within ~20 sessions, vs stocks that were already strong', strongS.filter(x => x.fresh === 1), strongS.filter(x => x.fresh === 0)),
 ];
 log(`triggers: ${triggers.map(t => `${t.name} ${t.edge[1]}pp (n ${t.pass[1].n})`).join(' · ')}`);

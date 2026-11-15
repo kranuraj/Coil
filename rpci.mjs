@@ -3,10 +3,12 @@
 export const CONFIG = {
   pe: { max: 40, pegMax: 2, pegAbove: 25 },   // PEG test only applies when P/E > pegAbove
   earnings: { minEpsGrowth: 0.15, minRevGrowth: 0.10, minRoe: 0.12 },
-  momentum: { rsiMin: 55, rsiMax: 80 },
-  contraction: { atrRatioMax: 0.75, rangePctMax: 0.12, lookback: 10 },
+  momentum: { rsiMin: 55, rsiMax: 100 },   // calibrated: no RSI ceiling
+  contraction: { atrRatioMax: 0.75, rangePctMax: 0.12, lookback: 10, weekly: false, wRatioMax: 0.8 },  // weekly: also pass when the last 3 weekly ranges average <= wRatioMax x the prior 10
+  tf: { frames: 'DWM' },   // 'DWM' = daily, weekly and monthly must align; 'DW' = daily and weekly
   outperf: { periods: [63, 126] },              // ~3M and ~6M trading days
-  instCandle: { lookback: 50, bodyMult: 5, volHighOf: 50, minCount: 1 },  // record-volume, very wide up candle
+  instCandle: { lookback: 50, bodyMult: 3, volMode: 'mult', volHighOf: 50, volMult: 3.5, minCount: 1 },  // volMode 'high' = highest volume of volHighOf sessions; 'mult' = >= volMult x 50-session average
+  dow: { w: 3, pass: 'up' },   // pass 'up' = Uptrend only; 'notdown' = Uptrend or Sideways
   stExt: { emaLen: 21, atrMult: 3 },   // extended = more than 3 ATR above EMA21
   ltExt: { maxPctAbove200: 0.40 },
 };
@@ -70,13 +72,15 @@ export function priceContraction(b) {
   const C = CONFIG.contraction, a = atr(b, 14), aNow = sma(a, 10), aBase = sma(a, 50);
   const ratio = last(aNow) / last(aBase), w = b.slice(-C.lookback);
   const hi = Math.max(...w.map(x => x.h)), lo = Math.min(...w.map(x => x.l)), range = (hi - lo) / hi;
-  const pass = ratio <= C.atrRatioMax || range <= C.rangePctMax;
-  return { result: pass ? 'YES' : 'NO', pass, detail: `ATR10/ATR50 ${ratio.toFixed(2)}, ${C.lookback}d range ${(range * 100).toFixed(1)}%` };
+  let wr = NaN; if (C.weekly) { const wk = resample(b, 'W'), rg = wk.map(x => (x.h - x.l) / x.h), n = rg.length;
+    if (n >= 14) wr = (rg.slice(n - 3).reduce((t, x) => t + x, 0) / 3) / (rg.slice(n - 13, n - 3).reduce((t, x) => t + x, 0) / 10); }
+  const pass = ratio <= C.atrRatioMax || range <= C.rangePctMax || (C.weekly && wr <= C.wRatioMax);
+  return { result: pass ? 'YES' : 'NO', pass, detail: `ATR10/ATR50 ${ratio.toFixed(2)}, ${C.lookback}d range ${(range * 100).toFixed(1)}%${C.weekly && isFinite(wr) ? `, weekly range ratio ${wr.toFixed(2)}` : ''}` };
 }
 export function timeframeAlignment(b) {
   const up = bars => { const c = bars.map(x => x.c); return last(c) > last(ema(c, 10)) && last(ema(c, 10)) > last(ema(c, 20)); };
   const d = up(b), w = up(resample(b, 'W')), m = up(resample(b, 'M'));
-  const pass = d && w && m;
+  const pass = CONFIG.tf.frames === 'DW' ? d && w : d && w && m;
   return { result: pass ? 'YES' : 'NO', pass, detail: `D ${d ? '↑' : '↓'} W ${w ? '↑' : '↓'} M ${m ? '↑' : '↓'}` };
 }
 export function outperformance(b, bench) {
@@ -87,14 +91,14 @@ export function outperformance(b, bench) {
   return { result: pass ? 'YES' : 'NO', pass, detail: rs.map((x, i) => `${CONFIG.outperf.periods[i]}d ${(x * 100).toFixed(1)}%`).join(', ') + ' vs index' };
 }
 export function institutionalCandles(b) {
-  const I = CONFIG.instCandle, body = b.map(x => Math.abs(x.c - x.o)), ab = sma(body, 20);
+  const I = CONFIG.instCandle, body = b.map(x => Math.abs(x.c - x.o)), ab = sma(body, 20), av = sma(b.map(x => x.v), 50);
   let n = 0;
   for (let i = b.length - I.lookback; i < b.length; i++) if (i > 0) {
     const x = b[i], rng = x.h - x.l || 1e-9;
-    const volHigh = x.v > Math.max(...b.slice(Math.max(0, i - I.volHighOf), i).map(y => y.v));
+    const volHigh = I.volMode === 'mult' ? x.v >= I.volMult * av[i - 1] : x.v > Math.max(...b.slice(Math.max(0, i - I.volHighOf), i).map(y => y.v));
     if (x.c > x.o && body[i] >= I.bodyMult * ab[i - 1] && volHigh && (x.c - x.l) / rng >= 0.7) n++;
   }
-  return { result: String(n), pass: n >= I.minCount, detail: `up candles with body ≥${I.bodyMult}× average on the highest volume of ${I.volHighOf} sessions, last ${I.lookback} sessions` };
+  return { result: String(n), pass: n >= I.minCount, detail: `up candles with body ≥${I.bodyMult}× average on ${I.volMode === 'mult' ? `≥${I.volMult}× average volume` : `the highest volume of ${I.volHighOf} sessions`}, last ${I.lookback} sessions` };
 }
 export function shortTermExtension(b) {
   const S = CONFIG.stExt, c = b.map(x => x.c), e = last(ema(c, S.emaLen)), a = last(atr(b)), p = last(c);
@@ -120,12 +124,12 @@ export function stageAnalysis(b) {
 }
 // Dow theory on weekly swings: higher highs AND higher lows
 export function dowTheoryWeekly(b) {
-  const { H, L } = pivots(resample(b, 'W').slice(-60), 2);
+  const { H, L } = pivots(resample(b, 'W').slice(-60), CONFIG.dow.w);
   if (H.length < 2 || L.length < 2) return { result: 'N/A', pass: null };
   const p = last(b).c, hh = last(H) > H[H.length - 2], hl = last(L) > L[L.length - 2];
   // A close beyond the last confirmed swing point sets the new trend before the next pivot forms
   const r = p > last(H) && p > last(L) ? 'Uptrend' : p < last(L) ? 'Downtrend' : hh && hl ? 'Uptrend' : !hh && !hl ? 'Downtrend' : 'Sideways';
-  return { result: r, pass: r === 'Uptrend' };
+  return { result: r, pass: CONFIG.dow.pass === 'notdown' ? r !== 'Downtrend' : r === 'Uptrend' };
 }
 
 export function runRPCI(bars, bench, fundamentals) {
@@ -144,6 +148,8 @@ export function runRPCI(bars, bench, fundamentals) {
   ].map(([name, r]) => ({ name, ...r }));
   const score = rows.filter(r => r.pass).length, total = rows.filter(r => r.pass !== null).length;
   const pct = total ? score / total : 0;
-  const conditions = pct >= 0.85 ? 'Strongly favourable' : pct >= 0.7 ? 'Favourable' : pct >= 0.5 ? 'Neutral' : 'Unfavourable';
+  // creator's bands on the 11-point scale: 9+ strongly favourable, 7-8 favourable, else wait (scaled when checks are N/A)
+  const s11 = total ? score / total * 11 : 0;
+  const conditions = s11 >= 8.5 ? 'Strongly favourable' : s11 >= 6.5 ? 'Favourable' : 'Wait on';
   return { rows, score, total, conditions };
 }

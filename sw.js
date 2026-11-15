@@ -1,5 +1,5 @@
 // App shell cache-first; data (JSON) network-first so it is fresh online and still opens offline.
-const C = 'coil-v21', SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png'];
+const C = 'coil-v22', SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(C).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== C).map(x => caches.delete(x))))); self.clients.claim(); });
 self.addEventListener('fetch', e => {

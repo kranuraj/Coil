@@ -51,3 +51,15 @@ node evaluate.mjs /tmp/bars                                               # writ
 - **Paper portfolio:** top 10 liquid stocks every 20 sessions, 2×ATR stop, 0.2% costs, walk-forward. Shown in the app under Paper portfolio.
 - **Triggers:** "Breakout today" (close above the 20-session high on 1.5x volume) and "fresh setup" are backtested on the same grid. Breakout + 7/9 technical passes tested best (+2.5 pp at 20 days); fresh setups did not help (-1.1 pp). The app's Breakouts chip uses breakout + 70%+ score.
 - **Watchlist and position size:** stored on the device. Stop = price − 2×ATR(14); quantity = capital × risk ÷ (2×ATR), capped at 10% of capital.
+
+## Calibration to the creator's published scores (13 Nov 2026)
+Tuned against 22 stock scores and market totals shown on the creator's dashboard (90 at 9+, mean 4.75):
+Momentum has no RSI ceiling; Institutional Candles = up candle ≥3× average body on ≥3.5× 50-day volume within 50 sessions;
+Dow Theory uses 3-week swing pivots. Result: 103 at 9+, mean 4.79; 17 of 23 known stocks within 1 point.
+Conditions follow his bands: Strongly favourable 9+, Favourable 7–8, Wait on below 7.
+
+## Daily read (`daily.mjs`)
+`node daily.mjs <barsCacheDir>` after the scan: rebuilds 21 sessions of scores from cached prices to give New 9+ / Lost 9+,
+up/down counts and breadth history; Nifty regime from its 20/50/200-day averages (above all three = Uptrend);
+sector Stage 2 share now vs 30 sessions ago; base breakouts (Stage 2 close above a 20+ session base inside a 30% band).
+Base breakout tested at +6.1 pp over 20 days, the strongest single trigger so far.
