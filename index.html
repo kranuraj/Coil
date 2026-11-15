@@ -720,6 +720,8 @@ async function compare(){const V=$('pageView');if(!CM){V.innerHTML='<div class="
   <tr><td>Backtest portfolio</td>${P.map(p=>`<td class="n">${cell(p.portfolio?.total,'%')}</td>`).join('')}</tr>
   <tr><td>Max drawdown</td>${P.map(p=>`<td class="n">${cell(p.portfolio?.maxDD,'%')}</td>`).join('')}</tr>
   <tr><td>Top 10% beat Nifty</td>${P.map(p=>`<td class="n">${p.top10?p.top10.hit+'%':'—'}</td>`).join('')}</tr>
+  <tr><td>Matches creator's checks</td>${P.map(p=>`<td class="n">${p.truth?p.truth.checks:'—'}</td>`).join('')}</tr>
+  <tr><td>Avg gap to creator's score</td>${P.map(p=>`<td class="n">${p.truth?p.truth.scoreGap:'—'}</td>`).join('')}</tr>
   <tr><td>Base breakout edge</td>${P.map(p=>`<td class="n">${cell(p.baseEdge,' pp')}</td>`).join('')}</tr></table>
   <div class="note">Live rows fill in as daily picks mature (10 trading days needed). ✓ = version in use. Base breakouts (v2) live: 5 days ${lv(C.bases.live5)}.</div></div>
  <div class="card"><h2>Today's top 10 picks <small>liquid stocks, ranked by RPCI score</small></h2><table class="tbl"><tr>${P.map((p,i)=>`<th style="color:${col[i]}">${p.id}</th>`).join('')}</tr>

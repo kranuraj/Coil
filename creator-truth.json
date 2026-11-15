@@ -1,0 +1,5 @@
+{"note":"Creator's published per-check results (rpci.stratlab.in charts), 13 Nov 2026 close. fails = checks he marks FAIL; all others PASS.",
+ "date":"2026-11-13",
+ "stocks":{"ACUTAAS":["VAL"],"AUROPHARMA":["INS"],"DHANBANK":["CON"],"APLAPOLLO":["INS"],"MMFL":["CON"],"KROSS":["TFA"],"LTTS":["ERN"]},
+ "scores":{"DHANBANK":10,"MUNJALAU":10,"APLAPOLLO":10,"KALYANKJIL":9,"STEL":9,"ALICON":9,"APOLLO":8,"JMA":7,"RPEL":7,"STYLEBAAZA":6,"GRASIM":6,"THEJO":6,"ACE":7,"ARVEE":7,"GKB":7,"ACUTAAS":10,"APLLTD":10,"AUROPHARMA":10,"GAIL":10,"GLAND":10,"KRISHNADEF":10,"MINDACORP":10,"MMFL":10,"KROSS":10,"LTTS":10},
+ "totals":{"at9plus":90,"mean":4.75,"universe":2388}}
