@@ -16,6 +16,9 @@ import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
 import * as R from './rpci.mjs';
 
 const CACHE = process.argv[2];
+const PROFILE = process.env.RPCI_PROFILE || '';
+if (PROFILE) R.useProfile(PROFILE);
+const SUF = PROFILE ? '-' + PROFILE : '';
 if (!CACHE) { console.error('usage: node evaluate.mjs <barsCacheDir>'); process.exit(1); }
 const HERE = new URL('./', import.meta.url);
 const H = [5, 20, 60], STEP = 5, LOOKBACK = 500, WINDOW = 420, CAP = 1, MIN_VAL = 5e6, LIQ = 1e8;
@@ -298,12 +301,12 @@ for (const r of res.results) {
   Object.assign(r, { prob: q.p, exp20: q.x, decile: q.decile, raw: +z.toFixed(4), sector: t.sec, secRS: t.secRS == null ? null : +(t.secRS * 100).toFixed(1), secPass: t.secPass });
 }
 res.regime = curReg;
-writeFileSync(RES, JSON.stringify(res));
+if (!PROFILE) writeFileSync(RES, JSON.stringify(res));
 const snapF = new URL(`${portfolio.asOf}.json`, HIST);
-if (existsSync(snapF)) { const s = load(snapF); s.top = res.results.filter(r => r.decile >= 10 && r.value >= 10).map(r => r.symbol); s.regime = curReg; writeFileSync(snapF, JSON.stringify(s)); }
+if (!PROFILE && existsSync(snapF)) { const s = load(snapF); s.top = res.results.filter(r => r.decile >= 10 && r.value >= 10).map(r => r.symbol); s.regime = curReg; writeFileSync(snapF, JSON.stringify(s)); }
 
-writeFileSync(new URL('./portfolio.json', HERE), JSON.stringify(portfolio));
-writeFileSync(new URL('./analytics.json', HERE), JSON.stringify({ asOf: res.asOf, horizons: H, checks: CHECKS,
+writeFileSync(new URL(`./portfolio${SUF}.json`, HERE), JSON.stringify(portfolio));
+writeFileSync(new URL(`./analytics${SUF}.json`, HERE), JSON.stringify({ asOf: res.asOf, horizons: H, checks: CHECKS,
   method: { step: STEP, lookbackSessions: LOOKBACK, cap: CAP, minTradedValue: '₹50 lakh', split },
   backtest: { samples: samples.length, from: dates[0], to: last(dates), ...bt, buckets, pairs: combos(2, 2000), triples: combos(3, 1000), quarters, stability, calib: model.calib },
   regime, sector, tuning, model, triggers,

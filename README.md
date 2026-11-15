@@ -63,3 +63,10 @@ Conditions follow his bands: Strongly favourable 9+, Favourable 7–8, Wait on b
 up/down counts and breadth history; Nifty regime from its 20/50/200-day averages (above all three = Uptrend);
 sector Stage 2 share now vs 30 sessions ago; base breakouts (Stage 2 close above a 20+ session base inside a 30% band).
 Base breakout tested at +6.1 pp over 20 days, the strongest single trigger so far.
+
+## Strategy tracking (`track.mjs`, `weekly.mjs`)
+Three profiles are tracked side by side (`PROFILES` in `rpci.mjs`): **v1** original, **v2** calibrated to the creator's market totals (in use),
+**v3** matched to the creator's per-check results (challenger). Each trading day `node track.mjs <bars>` saves every profile's top 10 liquid picks
+and v2's base breakouts to `history/strategies/`. Each week `RPCI_PROFILE=v1|v2|v3 node evaluate.mjs <bars>` backtests each profile
+(`analytics-<p>.json`, `portfolio-<p>.json`) and `node weekly.mjs <bars>` writes `reports/weekly-<date>.md` comparing backtest and live results.
+Profiles are never switched automatically.

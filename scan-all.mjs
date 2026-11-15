@@ -24,7 +24,8 @@ async function worker() {
         const bars = await getBars(s.symbol + '.NS');
         if (bars.length < 60) throw new Error('short history');
         if (CACHE) writeFileSync(`${CACHE}/${s.symbol}.json`, JSON.stringify(bars.map(b => [b.t, +b.o.toFixed(2), +b.h.toFixed(2), +b.l.toFixed(2), +b.c.toFixed(2), b.v])));
-        const r = runRPCI(bars, bench, await getFundamentals(s.symbol + '.NS', bars[bars.length - 1].c));
+        const fu = await getFundamentals(s.symbol + '.NS', bars[bars.length - 1].c);
+        const r = runRPCI(bars, bench, fu);
         const lastBar = bars[bars.length - 1], prev = bars[bars.length - 2];
         // breakout trigger: close above the prior 20-session high on >= 1.5x the 50-session average volume
         const n = bars.length, hh20 = Math.max(...bars.slice(n - 21, n - 1).map(b => b.h)), av50 = bars.slice(n - 51, n - 1).reduce((t, b) => t + b.v, 0) / 50;
@@ -32,6 +33,7 @@ async function worker() {
         results.push({ ...s, price: +lastBar.c.toFixed(2), chg: +((lastBar.c / prev.c - 1) * 100).toFixed(2),
           volume: lastBar.v, value: Math.round(lastBar.c * lastBar.v / 1e5) / 100,  // ₹ crore traded
           score: r.score, total: r.total, conditions: r.conditions,
+          fu: fu ? Object.fromEntries(Object.entries(fu).map(([k, v]) => [k, v == null ? null : +(+v).toFixed(4)])) : null,
           atr: +atr14.toFixed(2), bo, vr: +vr.toFixed(2), prev: PREV.get(s.symbol) ?? null,
           rows: r.rows.map(x => [x.result, x.pass === null ? null : x.pass ? 1 : 0, x.detail || '']) });
         break;

@@ -2,7 +2,7 @@
 // Reconstructed from the public RPCI 11-point checklist. Thresholds are in CONFIG.
 export const CONFIG = {
   pe: { max: 40, pegMax: 2, pegAbove: 25 },   // PEG test only applies when P/E > pegAbove
-  earnings: { minEpsGrowth: 0.15, minRevGrowth: 0.10, minRoe: 0.12 },
+  earnings: { minEpsGrowth: 0.15, minRevGrowth: 0.10, minRoe: 0.12, epsAlone: null },   // epsAlone: if set, EPS growth >= this passes on its own
   momentum: { rsiMin: 55, rsiMax: 100 },   // calibrated: no RSI ceiling
   contraction: { atrRatioMax: 0.75, rangePctMax: 0.12, lookback: 10, weekly: false, wRatioMax: 0.8 },  // weekly: also pass when the last 3 weekly ranges average <= wRatioMax x the prior 10
   tf: { frames: 'DWM' },   // 'DWM' = daily, weekly and monthly must align; 'DW' = daily and weekly
@@ -12,6 +12,15 @@ export const CONFIG = {
   stExt: { emaLen: 21, atrMult: 3 },   // extended = more than 3 ATR above EMA21
   ltExt: { maxPctAbove200: 0.40 },
 };
+
+// Strategy profiles tracked side by side (see track.mjs / weekly.mjs). CONFIG above = the profile in use (v2).
+export const PROFILES = {
+  v1: { label: 'v1 · original', pe: { max: 40 }, earnings: { epsAlone: null }, stExt: { atrMult: 3 }, momentum: { rsiMax: 80 }, tf: { frames: 'DWM' }, instCandle: { bodyMult: 5, volMode: 'high', volHighOf: 50, lookback: 50 }, dow: { w: 2, pass: 'up' } },
+  v2: { label: 'v2 · calibrated (in use)', pe: { max: 40 }, earnings: { epsAlone: null }, stExt: { atrMult: 3 }, momentum: { rsiMax: 100 }, tf: { frames: 'DWM' }, instCandle: { bodyMult: 3, volMode: 'mult', volMult: 3.5, lookback: 50 }, dow: { w: 3, pass: 'up' } },
+  v3: { label: 'v3 · check-matched (challenger)', pe: { max: 60 }, earnings: { epsAlone: 0.15 }, stExt: { atrMult: 3.5 }, momentum: { rsiMax: 100 }, tf: { frames: 'DWM' }, instCandle: { bodyMult: 3, volMode: 'mult', volMult: 3.5, lookback: 50 }, dow: { w: 3, pass: 'up' } },
+};
+export function useProfile(name) { const p = PROFILES[name]; if (!p) throw new Error('unknown profile ' + name);
+  for (const [k, v] of Object.entries(p)) if (k !== 'label') Object.assign(CONFIG[k], v); return p; }
 
 // ---------- helpers ----------
 const last = a => a[a.length - 1];
@@ -59,7 +68,7 @@ export function earningsPower(f) {
   if (!f || (f.epsGrowth == null && f.revGrowth == null)) return { result: 'N/A', pass: null };
   const E = CONFIG.earnings; let s = 0, n = 0;
   for (const [v, m] of [[f.epsGrowth, E.minEpsGrowth], [f.revGrowth, E.minRevGrowth], [f.roe, E.minRoe]]) if (v != null) { n++; if (v >= m) s++; }
-  const pass = s >= Math.ceil(n * 2 / 3);
+  const pass = s >= Math.ceil(n * 2 / 3) || (E.epsAlone != null && f.epsGrowth != null && f.epsGrowth >= E.epsAlone);
   return { result: pass ? 'Strong' : s ? 'Moderate' : 'Weak', pass, detail: [['EPS', f.epsGrowth], ['Rev', f.revGrowth], ['ROE', f.roe]].filter(x => x[1] != null).map(([k, v]) => `${k} ${(v * 100).toFixed(1)}%`).join(', ') };
 }
 export function momentum(b) {
