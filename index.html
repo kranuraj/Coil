@@ -341,7 +341,7 @@ body{font-size:12.5px}.sb{font-size:12.5px;height:28px}.top .title{font-size:13p
 .themeseg button{flex:1;border:0;background:none;color:var(--sub);font:inherit;font-size:12px;height:28px;border-radius:7px;cursor:pointer}
 .themeseg button.on{background:var(--main);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.2)}
 @media(max-width:860px){.themeseg span{font-size:12px}.themeseg div{background:var(--fill,var(--soft))}.themeseg button{height:34px;font-size:14px}.themeseg button.on{background:var(--sheet)}}
-@media(max-width:860px){aside .anah,aside .sb[data-page]{display:none!important}}
+@media(max-width:860px){aside .sb[data-page=insights],aside .sb[data-page=portfolio]{display:none!important}}
 
 /* loading: splash + skeletons */
 #splash{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--sheet,var(--main));color:var(--text);transition:opacity .35s ease,visibility .35s}
@@ -418,7 +418,7 @@ body{font-size:12.5px}.sb{font-size:12.5px;height:28px}.top .title{font-size:13p
 <div id="views"></div>
 <h6>Stages</h6><div id="stages"></div>
 <h6 class="anah">Analysis</h6><button class="sb" data-page="insights"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2a6.3 6.3 0 0 0-3.6 11.5c.6.4 1 1.1 1 1.8v.5h5.2v-.5c0-.7.4-1.4 1-1.8A6.3 6.3 0 0 0 12 3.2Z"/><path d="M9.8 20.2h4.4"/></svg>Insights</button>
-<button class="sb" data-page="portfolio"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12Z"/><path d="M15 3.9a8.5 8.5 0 0 1 5.1 5.1H15Z"/></svg>Paper portfolio</button>
+<button class="sb" data-page="compare"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4v16M16 4v16M4 8h8M12 16h8"/></svg>Compare strategies</button><button class="sb" data-page="portfolio"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12Z"/><path d="M15 3.9a8.5 8.5 0 0 1 5.1 5.1H15Z"/></svg>Paper portfolio</button>
 <div id="regime"></div><div class="themeseg" role="radiogroup" aria-label="Theme"><span>Appearance</span><div><button data-th="light">Light</button><button data-th="dark">Dark</button><button data-th="">System</button></div></div>
 <div class="foot" id="asof"></div>
 </aside>
@@ -538,13 +538,13 @@ let A=null,P=null,hz=1;const HZ=['5 days','20 days','60 days'],HK=['h5','h20','h
 function go(p){if(location.hash.slice(1)!==p)location.hash=p;else route()}
 window.addEventListener('hashchange',route);
 document.querySelectorAll('aside .sb[data-page]').forEach(b=>b.onclick=()=>go(b.dataset.page));
-async function route(){const p=location.hash.slice(1),page=p==='insights'||p==='portfolio';
+async function route(){const p=location.hash.slice(1),page=p==='insights'||p==='portfolio'||p==='compare';
  $('main').classList.toggle('page',page);closePeek();
  document.querySelectorAll('aside .sb[data-v]').forEach(b=>b.classList.toggle('on',!page&&b.dataset.v===st.view));
  document.querySelectorAll('aside .sb[data-page]').forEach(b=>b.classList.toggle('on',b.dataset.page===p));
  if(!page)return;const V=$('pageView');
  if(!A||!P){V.innerHTML='<div class="skpage"><div class="skcard" style="height:26px;width:55%"></div><div class="skcard" style="height:12px;width:80%;margin-top:12px"></div><div class="skgrid">'+'<div class="skcard" style="height:84px"></div>'.repeat(4)+'</div><div class="skcard" style="height:260px"></div><div class="skcard" style="height:180px;margin-top:16px"></div></div>';[A,P]=await Promise.all([fetch('analytics.json').then(r=>r.json()),fetch('portfolio.json').then(r=>r.json())])}
- V.scrollTop=0;p==='insights'?insights():portfolio()}
+ V.scrollTop=0;p==='insights'?insights():p==='compare'?compare():portfolio()}
 function regimeBadge(){const r=(D.regime2||D.regime||'').toLowerCase();if(!r)return;const c={bull:'var(--g)',neutral:'var(--y)',bear:'var(--r)',uptrend:'var(--g)',sideways:'var(--y)',downtrend:'var(--r)'}[r];
  $('regime').innerHTML=`<div class="regime" title="Nifty 50 vs its 200-day average and the 50-day trend"><i style="background:${c}"></i>Market regime: <b style="color:var(--text);font-weight:500;text-transform:capitalize">${r}</b></div>`}
 const f1=(x,d=1)=>x==null?'—':(x>0?'+':'')+(+x).toFixed(d),cl=x=>x>0?'pos':x<0?'neg':'';
@@ -702,4 +702,26 @@ function readCard(){const el=$('read');if(!el||!DY)return;const d=DY,dn=d.n9-d.n
 function tvCopy(){const t=rows.map(r=>'NSE:'+r.symbol).join(',');const done=()=>{const b=$('tvcopy');b.textContent='Copied '+rows.length+' ✓';setTimeout(()=>b.textContent='Copy to TradingView',1600)};
  if(navigator.clipboard)navigator.clipboard.writeText(t).then(done,()=>prompt('Copy:',t));else prompt('Copy:',t)}
 const _apply3=apply;apply=function(){_apply3();if($('lcount'))$('lcount').textContent=rows.length.toLocaleString('en-IN')+' stocks'};
+
+// ---------- strategy comparison ----------
+let CM=null;
+async function compare(){const V=$('pageView');if(!CM){V.innerHTML='<div class="skpage"><div class="skcard" style="height:26px;width:50%"></div><div class="skgrid">'+'<div class="skcard" style="height:84px"></div>'.repeat(3)+'</div><div class="skcard" style="height:240px"></div></div>';
+  try{CM=await fetch('compare.json?t='+Date.now()).then(r=>r.json())}catch(e){V.innerHTML=pgTop('Compare')+'<div class="empty">No comparison yet. It appears after the first weekly run.</div>';return}}
+ const C=CM,col=['var(--g)','var(--acc2)','var(--o)'],P=C.profiles;
+ const lv=x=>!x||x.mean==null?`<span style="color:var(--dim)">building · ${x?x.lists:0}/10</span>`:`<span class="${x.mean>=0?'pos':'neg'}">${x.mean>=0?'+':''}${(x.mean*100).toFixed(1)}%</span>`;
+ const cell=(v,s='')=>v==null?'—':`${v>0&&s?'+':''}${v}${s}`;
+ const series=P.filter(p=>p.portfolio).map((p,i)=>({n:p.label,c:col[i],w:p.inUse?2.6:1.8,pts:p.portfolio.pts}));if(C.nifty)series.push({n:'Nifty 50',c:'var(--dim)',dash:1,pts:C.nifty.pts});
+ $('pageView').innerHTML=pgTop('Compare strategies')+`<div class="pg"><h1>Strategy comparison</h1><p class="lead">${C.verdict}. Updated ${C.asOf}.</p>
+ <div class="kpis">${P.map((p,i)=>`<div class="kpi" style="box-shadow:inset 3px 0 0 ${col[i]}"><b class="${(p.portfolio?.total??0)>=0?'pos':'neg'}">${cell(p.portfolio?.total,'%')}</b><span>${p.label}${p.inUse?' ✓':''} · backtest portfolio</span></div>`).join('')}</div>
+ <div class="card"><h2>Equity curve <small>top 10 every 20 sessions, 2-year backtest</small></h2><div class="bd"><div class="legend">${series.map(s=>`<span><i style="background:${s.c}"></i>${s.n}</span>`).join('')}</div>${series.length?lineChart(series):''}</div></div>
+ <div class="card"><h2>Side by side</h2><table class="tbl"><tr><th></th>${P.map((p,i)=>`<th class="n" style="color:${col[i]}">${p.id}${p.inUse?' ✓':''}</th>`).join('')}</tr>
+  <tr><td>Live picks · 5 days vs Nifty</td>${P.map(p=>`<td class="n">${lv(p.live5)}</td>`).join('')}</tr>
+  <tr><td>Live picks · 20 days vs Nifty</td>${P.map(p=>`<td class="n">${lv(p.live20)}</td>`).join('')}</tr>
+  <tr><td>Backtest portfolio</td>${P.map(p=>`<td class="n">${cell(p.portfolio?.total,'%')}</td>`).join('')}</tr>
+  <tr><td>Max drawdown</td>${P.map(p=>`<td class="n">${cell(p.portfolio?.maxDD,'%')}</td>`).join('')}</tr>
+  <tr><td>Top 10% beat Nifty</td>${P.map(p=>`<td class="n">${p.top10?p.top10.hit+'%':'—'}</td>`).join('')}</tr>
+  <tr><td>Base breakout edge</td>${P.map(p=>`<td class="n">${cell(p.baseEdge,' pp')}</td>`).join('')}</tr></table>
+  <div class="note">Live rows fill in as daily picks mature (10 trading days needed). ✓ = version in use. Base breakouts (v2) live: 5 days ${lv(C.bases.live5)}.</div></div>
+ <div class="card"><h2>Today's top 10 picks <small>liquid stocks, ranked by RPCI score</small></h2><table class="tbl"><tr>${P.map((p,i)=>`<th style="color:${col[i]}">${p.id}</th>`).join('')}</tr>
+  ${Array.from({length:10},(_,k)=>`<tr>${P.map(p=>{const s=p.picks[k];return `<td>${s?`<a href="https://www.tradingview.com/chart/?symbol=NSE:${encodeURIComponent(s)}" target="_blank" rel="noopener" style="color:var(--text);text-decoration:none">${s}</a>`:''}</td>`}).join('')}</tr>`).join('')}</table></div></div>`}
 </script></body></html>

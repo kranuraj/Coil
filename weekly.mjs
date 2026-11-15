@@ -70,6 +70,12 @@ ${rows.map(([n, f]) => `| ${n} | ${AS.map(f).join(' | ')} |`).join('\n')}
 ${VS.map(v => `- **${LB[v]}:** ${days.at(-1)?.profiles[v]?.top.map(x => x[0]).join(', ') || '—'}`).join('\n')}
 - **v2 base breakouts:** ${days.at(-1)?.profiles.v2?.bases?.map(x => x[0]).join(', ') || '—'}
 `;
+const cmp = { asOf: today, verdict, days: days.length, profiles: VS.map((v, k) => { const p = PS[k], t = top(AS[k]);
+  return { id: v, label: LB[v], inUse: v === 'v2', portfolio: p ? { total: p.curves.model.total, maxDD: p.curves.model.maxDD, win: p.trades.model.win, pts: p.curves.model.pts } : null,
+    top10: t ? { hit: t.hit, mean: t.mean } : null, baseEdge: trig(AS[k], 'Base breakout + strong score') ?? null,
+    live5: live[v + '_5'], live20: live[v + '_20'], n9: days.at(-1)?.profiles[v]?.n9 ?? null, picks: days.at(-1)?.profiles[v]?.top.map(x => x[0]) || [] }; }),
+  nifty: PS.find(Boolean)?.curves.nifty || null, bases: { live5: live.v2bases_5, live20: live.v2bases_20, picks: days.at(-1)?.profiles.v2?.bases?.map(x => x[0]) || [] } };
+writeFileSync(new URL('./compare.json', HERE), JSON.stringify(cmp));
 const rd = new URL('./reports/', HERE); mkdirSync(rd, { recursive: true });
 writeFileSync(new URL(`weekly-${today}.md`, rd), md);
 console.log(md);
