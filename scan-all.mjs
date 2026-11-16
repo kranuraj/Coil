@@ -13,6 +13,8 @@ const list = readFileSync(csv, 'utf8').trim().split('\n').slice(1).map(l => l.sp
 const HIST = new URL('./history/', import.meta.url), PREV = new Map();
 if (existsSync(HIST)) { const fs = readdirSync(HIST).filter(x => x.endsWith('.json')).sort(); const today = new Date(Date.now() + 5.5 * 3600e3).toISOString().slice(0, 10);
   const lastF = fs.filter(x => x.slice(0, 10) < today).pop(); if (lastF) for (const [sym, score] of JSON.parse(readFileSync(new URL(lastF, HIST))).s) PREV.set(sym, score); }
+const KEEP = ['prob', 'exp20', 'decile', 'raw', 'sector', 'secRS', 'secPass'], OLD = new Map();
+try { for (const r of JSON.parse(readFileSync(outFile, 'utf8')).results) OLD.set(r.symbol, r); } catch { }
 const bench = await getBars('^NSEI');
 if (CACHE) writeFileSync(`${CACHE}/^NSEI.json`, JSON.stringify(bench));
 const results = []; let i = 0, done = 0, failed = 0;
@@ -43,6 +45,7 @@ async function worker() {
   }
 }
 await Promise.all(Array.from({ length: +conc }, worker));
+for (const r of results) { const o = OLD.get(r.symbol); if (o) for (const k of KEEP) if (r[k] == null && o[k] != null) r[k] = o[k]; }
 results.sort((a, b) => b.score / (b.total || 1) - a.score / (a.total || 1) || b.value - a.value);
 writeFileSync(outFile, JSON.stringify({ asOf: new Date().toISOString(), benchmark: '^NSEI', scanned: list.length, failed,
   checks: ['Valuation', 'Earnings Power', 'Momentum', 'Price Contraction', 'Timeframe Alignment', 'Outperformance', 'Institutional Candles', 'Short-term Extension', 'Long-term Extension', 'Stage Analysis', 'Dow Theory (W)'], results }));
