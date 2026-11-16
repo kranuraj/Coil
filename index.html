@@ -692,9 +692,9 @@ document.addEventListener('input',e=>{if(e.target.id!=='ccap'&&e.target.id!=='cr
 let DY=null;
 function spark(v,w=110,h=26){const a=v.filter(x=>x!=null),lo=Math.min(...a),hi=Math.max(...a),sx=w/(v.length-1||1),y=x=>h-3-(x-lo)/((hi-lo)||1)*(h-6);
  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline fill="none" stroke="var(--g)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" points="${v.map((x,i)=>`${(i*sx).toFixed(1)},${y(x).toFixed(1)}`).join(' ')}"/></svg>`}
-function readCard(){const el=$('read');if(!el||!DY)return;const d=DY,dn=d.n9-d.n9Prev,dm=+(d.mean-d.meanPrev).toFixed(2),dt=new Date(d.date+'T12:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+function readCard(){const el=$('read');if(!el||!DY)return;const d=DY,dn=d.n9-d.n9Prev,dm=+(d.mean-d.meanPrev).toFixed(2),dt=new Date(d.date+'T12:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});const ist=d.time?new Date(new Date(d.time).getTime()+5.5*3600e3):null,live=ist&&ist.toISOString().slice(0,10)===d.date&&ist.getUTCHours()*60+ist.getUTCMinutes()<15*60+30,when=live?`live · ${ist.toISOString().slice(11,16)} IST`:'close';
  const verb=dn>0?'Breadth widened':dn<0?'Breadth narrowed':'Breadth held';
- el.innerHTML=`<div class="rd"><div class="k">The read · ${dt} close</div><h3>${verb}: ${d.n9} stocks clear 9 of 11 — ${Math.abs(dn)} ${dn>=0?'more':'fewer'} than the previous session.</h3>
+ el.innerHTML=`<div class="rd"><div class="k">The read · ${dt} ${when}</div><h3>${verb}: ${d.n9} stocks clear 9 of 11 — ${Math.abs(dn)} ${dn>=0?'more':'fewer'} than the previous session.</h3>
  <div class="st"><div><small>At 9+ of 11</small><b>${d.n9}</b> <em class="${dn>=0?'up':'dn'}">${dn>=0?'+':''}${dn}</em>${spark(d.history.map(x=>x.n9),70,22)}</div>
  <div><small>Mean score</small><b>${d.mean.toFixed(2)}</b> <em class="${dm>=0?'up':'dn'}">${dm>=0?'+':''}${dm.toFixed(2)}</em></div>
  <div><small>Up / down</small><b><span class="up">${d.up}</span>/<span class="dn">${d.down}</span></b><em style="display:block;color:var(--dim)">${d.same.toLocaleString('en-IN')} unchanged</em></div>

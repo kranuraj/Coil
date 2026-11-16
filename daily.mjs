@@ -67,7 +67,7 @@ const up = full.filter(r => r.score > r.prev), down = full.filter(r => r.score <
 const n9 = res.results.filter(r => r.total === 11 && cur9(r)).length, s9 = series.map(x => x.n9);
 const rot = Object.entries(bySec).filter(([, v]) => v.n >= 10).map(([k, v]) => ({ sector: k, n: v.n, share: Math.round(v.now / v.n * 100), chg: +((v.now - v.then) / v.n * 100).toFixed(1) }))
   .sort((a, b) => b.chg - a.chg);
-const daily = { date: last(dates), regime: { label: regime, stack: lv.map(x => x[0]).join(' > '), close: +px.toFixed(2), ma20: +ma(20).toFixed(2), ma50: +ma(50).toFixed(2), ma200: +ma(200).toFixed(2) },
+const daily = { date: last(dates), time: new Date().toISOString(), regime: { label: regime, stack: lv.map(x => x[0]).join(' > '), close: +px.toFixed(2), ma20: +ma(20).toFixed(2), ma50: +ma(50).toFixed(2), ma200: +ma(200).toFixed(2) },
   n9, n9Prev: s9.at(-2), mean: +(full.reduce((t, r) => t + r.score, 0) / (full.length || 1)).toFixed(2),
   meanPrev: +(full.reduce((t, r) => t + r.prev, 0) / (full.length || 1)).toFixed(2),
   up: up.length, down: down.length, same: full.length - up.length - down.length,
