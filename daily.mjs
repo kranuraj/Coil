@@ -41,7 +41,9 @@ for (const r of res.results) {
   const fund = r.rows.slice(0, 2).filter(x => x[1] === 1).length, fundN = r.rows.slice(0, 2).filter(x => x[1] !== null).length;
   const sc = [];
   dates.forEach((d, k) => {
-    const i = at.get(d), bi = bIdx.get(d); if (i == null || i < 250) { sc.push(null); return; }
+    let i = at.get(d); const bi = bIdx.get(d);
+    if (i == null) { let k = bars.length - 1; while (k >= 0 && dkey(bars[k].t) > d) k--; i = k >= 0 && dkey(bars[k].t) >= dates[0] ? k : null; }   // data gap: use the latest bar on or before d
+    if (i == null || i < 250 || bi == null) { sc.push(null); return; }
     const t = techScore(bars.slice(Math.max(0, i - WINDOW), i + 1), bench.slice(Math.max(0, bi - WINDOW), bi + 1));
     const s = t.n + fund; sc.push(s);
     if (fundN === 2) { series[k].cnt++; series[k].sum += s; if (s >= 9) series[k].n9++; }
