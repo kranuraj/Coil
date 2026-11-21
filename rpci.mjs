@@ -18,6 +18,8 @@ export const PROFILES = {
   v1: { label: 'v1 · original', pe: { max: 40 }, earnings: { epsAlone: null }, stExt: { atrMult: 3 }, momentum: { rsiMax: 80 }, tf: { frames: 'DWM' }, instCandle: { bodyMult: 5, volMode: 'high', volHighOf: 50, lookback: 50 }, dow: { w: 2, pass: 'up' } },
   v2: { label: 'v2 · calibrated (in use)', pe: { max: 40 }, earnings: { epsAlone: null }, stExt: { atrMult: 3 }, momentum: { rsiMax: 100 }, tf: { frames: 'DWM' }, instCandle: { bodyMult: 3, volMode: 'mult', volMult: 3.5, lookback: 50 }, dow: { w: 3, pass: 'up' } },
   v3: { label: 'v3 · check-matched (challenger)', pe: { max: 60 }, earnings: { epsAlone: 0.15 }, stExt: { atrMult: 3.5 }, momentum: { rsiMax: 100 }, tf: { frames: 'DWM' }, instCandle: { bodyMult: 3, volMode: 'mult', volMult: 3.5, lookback: 50 }, dow: { w: 3, pass: 'up' } },
+  v4: { label: 'v4 · v2 + daily/weekly alignment (challenger)', pe: { max: 40 }, earnings: { epsAlone: null }, stExt: { atrMult: 3 }, momentum: { rsiMax: 100 }, tf: { frames: 'DW' }, instCandle: { bodyMult: 3, volMode: 'mult', volMult: 3.5, lookback: 50 }, dow: { w: 3, pass: 'up' } },
+  v5: { label: 'v5 · v3 + DW + looser extension (challenger)', pe: { max: 60 }, earnings: { epsAlone: 0.15 }, stExt: { atrMult: 4 }, momentum: { rsiMax: 100 }, tf: { frames: 'DW' }, instCandle: { bodyMult: 3, volMode: 'mult', volMult: 3.5, lookback: 50 }, dow: { w: 3, pass: 'up' } },
 };
 export function useProfile(name) { const p = PROFILES[name]; if (!p) throw new Error('unknown profile ' + name);
   for (const [k, v] of Object.entries(p)) if (k !== 'label') Object.assign(CONFIG[k], v); return p; }

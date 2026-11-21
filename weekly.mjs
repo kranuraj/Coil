@@ -21,7 +21,7 @@ const days = existsSync(dir) ? readdirSync(dir).filter(f => f.endsWith('.json'))
 function fwd(sym, d, h) { const b = barsOf(sym); if (!b) return null; const i = b.findIndex(x => dkey(x.t) === d), bi = bIdx.get(d);
   if (i < 0 || bi == null || i + h >= b.length || bi + h >= bench.length) return null; return b[i + h].c / b[i].c - bench[bi + h].c / bench[bi].c; }
 const live = {};
-const VS = ['v1', 'v2', 'v3'];
+const VS = ['v1', 'v2', 'v3', 'v4', 'v5'];
 for (const key of [...VS, 'v2bases']) for (const h of [5, 20]) {
   const ex = []; let lists = 0;
   for (const d of days) { const p = key === 'v2bases' ? d.profiles.v2?.bases : d.profiles[key]?.top; if (!p?.length) continue;
@@ -32,7 +32,7 @@ for (const key of [...VS, 'v2bases']) for (const h of [5, 20]) {
 const A = v => existsSync(new URL(`./analytics-${v}.json`, HERE)) ? load(new URL(`./analytics-${v}.json`, HERE)) : null;
 const P = v => existsSync(new URL(`./portfolio-${v}.json`, HERE)) ? load(new URL(`./portfolio-${v}.json`, HERE)) : null;
 const TR = existsSync(new URL('./truth.json', HERE)) ? load(new URL('./truth.json', HERE)) : {};
-const AS = VS.map(A), PS = VS.map(P), LB = { v1: 'v1 original', v2: 'v2 calibrated (in use)', v3: 'v3 check-matched' };
+const AS = VS.map(A), PS = VS.map(P), LB = { v1: 'v1 original', v2: 'v2 calibrated (in use)', v3: 'v3 check-matched', v4: 'v4 v2+DW', v5: 'v5 v3+DW+4ATR' };
 const top = a => a?.model?.candidates?.find(c => c.id === 'rpci')?.top;
 const trig = (a, n) => a?.triggers?.find(t => t.name === n)?.edge?.[1];
 const rows = [
