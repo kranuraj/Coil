@@ -1,0 +1,44 @@
+name: Coil scans
+# Runs the screener on GitHub (no AI). Times are UTC: 05:07/07:07/09:07 = 10:37/12:37/14:37 IST, 11:43 = 17:13 IST.
+on:
+  schedule:
+    - cron: '7 5,7,9 * * 1-5'   # intraday refresh
+    - cron: '43 11 * * 1-5'     # evening run: tracking + evaluation
+  workflow_dispatch:
+    inputs:
+      mode: { description: 'intraday or evening', default: 'evening' }
+permissions:
+  contents: write
+concurrency: { group: coil, cancel-in-progress: false }
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/cache@v4
+        with:
+          path: bars
+          key: bars-${{ github.run_id }}
+          restore-keys: bars-
+      - name: Stock list (falls back to the saved copy if NSE blocks the download)
+        run: |
+          curl -sS -m 30 -A "Mozilla/5.0" -o /tmp/eq.csv https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv && head -1 /tmp/eq.csv | grep -q SYMBOL && cp /tmp/eq.csv data/EQUITY_L.csv || echo "using saved list"
+      - name: Scan
+        run: |
+          RPCI_CACHE=bars node scan-all.mjs data/EQUITY_L.csv results.json 12
+          node daily.mjs bars
+      - name: Tracking and evaluation (evening only)
+        if: github.event.schedule == '43 11 * * 1-5' || (github.event_name == 'workflow_dispatch' && inputs.mode != 'intraday')
+        run: |
+          node track.mjs bars
+          node --max-old-space-size=6000 evaluate.mjs bars
+      - name: Commit (Vercel deploys on push)
+        run: |
+          git config user.name "kranuraj"; git config user.email "kranuraj@users.noreply.github.com"
+          git add results.json daily.json analytics.json portfolio.json history data/EQUITY_L.csv
+          if git diff --cached --quiet; then echo "no changes (holiday?)"; exit 0; fi
+          git commit -m "Auto scan $(TZ=Asia/Kolkata date '+%Y-%m-%d %H:%M') IST"
+          git pull --rebase -q && git push
