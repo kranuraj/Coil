@@ -31,14 +31,16 @@ jobs:
           RPCI_CACHE=bars node scan-all.mjs data/EQUITY_L.csv results.json 12
           node daily.mjs bars
       - name: Tracking and evaluation (evening only)
-        if: github.event.schedule == '43 11 * * 1-5' || (github.event_name == 'workflow_dispatch' && inputs.mode != 'intraday')
+        # GitHub often starts scheduled runs hours late, so any run after market close (15:30 IST) does the evening work
         run: |
+          H=$(TZ=Asia/Kolkata date +%H%M)
+          if [ "${{ inputs.mode }}" = "intraday" ] || { [ "$H" -ge 0900 ] && [ "$H" -lt 1530 ]; }; then echo "market hours: skip"; exit 0; fi
           node track.mjs bars
           node --max-old-space-size=6000 evaluate.mjs bars
       - name: Commit (Vercel deploys on push)
         run: |
           git config user.name "kranuraj"; git config user.email "kranuraj@users.noreply.github.com"
-          git add results.json daily.json analytics.json portfolio.json history data/EQUITY_L.csv
+          git add results.json daily.json analytics*.json portfolio*.json history data/EQUITY_L.csv
           if git diff --cached --quiet; then echo "no changes (holiday?)"; exit 0; fi
           git commit -m "Auto scan $(TZ=Asia/Kolkata date '+%Y-%m-%d %H:%M') IST"
           git pull --rebase -q && git push
